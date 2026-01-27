@@ -1,3 +1,5 @@
 Flask
-bing-image-downloader
 gunicorn
+bing-image-downloader
+requests
+lxml

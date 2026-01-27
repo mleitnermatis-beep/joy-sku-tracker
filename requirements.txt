@@ -1,0 +1,3 @@
+Flask
+bing-image-downloader
+gunicorn

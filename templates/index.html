@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Joy SKU Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+<h1>Joy SKU Tracker</h1>
+
+<form id="skuForm">
+<table border="1">
+<tr>
+<th>#</th><th>SKU</th><th>Marque</th><th>Nom produit</th><th>Contenance</th>
+</tr>
+{% for i in range(50) %}
+<tr>
+<td>{{ i+1 }}</td>
+<td><input name="sku_{{ i }}"></td>
+<td><input name="marque_{{ i }}"></td>
+<td><input name="nom_{{ i }}"></td>
+<td><input name="contenance_{{ i }}"></td>
+</tr>
+{% endfor %}
+</table>
+<button type="submit">Lancer Joy SKU Tracker</button>
+</form>
+
+<div id="progress"></div>
+
+<script>
+const form = document.getElementById('skuForm');
+const progressDiv = document.getElementById('progress');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  await fetch('/', { method: 'POST', body: formData });
+
+  const timer = setInterval(async () => {
+    const res = await fetch('/progress');
+    const data = await res.json();
+    progressDiv.innerText = `Progression: ${data.current}/${data.total} (${data.percent}%)`;
+
+    if (!data.running && data.total > 0) {
+      clearInterval(timer);
+      progressDiv.innerHTML = 'Terminé — <a href="/download">Télécharger le ZIP</a>';
+    }
+  }, 1000);
+});
+</script>
+
+</body>
+</html>

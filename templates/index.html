@@ -54,9 +54,12 @@ function run(){
  .then(r=>r.json())
  .then(d=>{
     document.getElementById("bar").value=100;
-    alert("ZIP généré : "+d.zip);
+
+    // 🔽 Déclenche automatiquement le téléchargement
+    window.location.href = d.download_url;
  });
 }
+
 </script>
 
 </body>

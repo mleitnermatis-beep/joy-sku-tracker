@@ -1,5 +1,2 @@
-Flask
+flask
 gunicorn
-bing-image-downloader
-requests
-lxml

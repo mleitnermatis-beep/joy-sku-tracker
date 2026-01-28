@@ -1,65 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+<meta charset="UTF-8">
 <title>Joy SKU Tracker</title>
+
 <style>
-table {border-collapse: collapse;}
-td,th {border:1px solid #ccc;padding:4px;}
-progress{width:300px;}
+:root {
+  --primary: #E1251B;
+  --dark: #1e1e1e;
+  --light: #f6f6f6;
+  --radius: 12px;
+  --shadow: 0 10px 25px rgba(0,0,0,.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff, #f3f3f3);
+  color: var(--dark);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.badge {
+  background: var(--primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #777;
+  padding: 10px;
+}
+
+td {
+  padding: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.add {
+  background: #efefef;
+}
+
+.add:hover {
+  background: #e2e2e2;
+}
+
+.run {
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.run:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.progress {
+  margin-top: 24px;
+}
+
+progress {
+  width: 100%;
+  height: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+  background-color: #eee;
+}
+
+progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--primary), #ff6b61);
+}
+
+.footer {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #999;
+}
 </style>
 </head>
+
 <body>
-<h2>Joy SKU Tracker</h2>
 
-<table id="table">
-<tr>
-  <th>SKU</th>
-  <th>Marque</th>
-  <th>Produit</th>
-  <th>Contenance</th>
-</tr>
-</table>
+<div class="container">
 
-<button onclick="addRow()">Ajouter ligne</button>
-<button onclick="run()">Lancer</button>
+  <div class="header">
+    <div class="title">Joy SKU Tracker</div>
+    <div class="badge">Image Downloader</div>
+  </div>
 
-<br><br>
-<progress id="bar" value="0" max="100"></progress>
+  <div class="table-wrapper">
+    <table id="table">
+      <tr>
+        <th>SKU</th>
+        <th>Marque</th>
+        <th>Produit</th>
+        <th>Contenance</th>
+      </tr>
+    </table>
+  </div>
+
+  <div class="actions">
+    <button class="add" onclick="addRow()">➕ Ajouter une ligne</button>
+    <button class="run" onclick="run()">🚀 Lancer</button>
+  </div>
+
+  <div class="progress">
+    <progress id="bar" value="0" max="100"></progress>
+  </div>
+
+  <div class="footer">
+    Jusqu’à 50 lignes • 5 images HD par produit
+  </div>
+
+</div>
 
 <script>
 function addRow(){
- const t=document.getElementById("table");
- const r=t.insertRow();
+ const t = document.getElementById("table");
+ const r = t.insertRow();
  for(let i=0;i<4;i++){
-   r.insertCell().innerHTML='<input>';
+   r.insertCell().innerHTML = '<input placeholder="...">';
  }
 }
+
 for(let i=0;i<5;i++) addRow();
 
 function run(){
- const rows=[];
+ const rows = [];
  document.querySelectorAll("#table tr").forEach((r,i)=>{
   if(i===0) return;
-  const c=r.querySelectorAll("input");
-  if(c[0].value) rows.push({sku:c[0].value});
+  const c = r.querySelectorAll("input");
+  if(c[0].value){
+    rows.push({
+      sku: c[0].value,
+      brand: c[1].value,
+      name: c[2].value,
+      size: c[3].value
+    });
+  }
  });
 
- document.getElementById("bar").value=40;
+ document.getElementById("bar").value = 30;
 
  fetch("/run",{
    method:"POST",
    headers:{"Content-Type":"application/json"},
    body:JSON.stringify({rows})
  })
- .then(r=>r.json())
- .then(d=>{
-    document.getElementById("bar").value=100;
-
-    // 🔽 Déclenche automatiquement le téléchargement
+ .then(r => r.json())
+ .then(d => {
+    document.getElementById("bar").value = 100;
     window.location.href = d.download_url;
  });
 }
-
 </script>
 
 </body>

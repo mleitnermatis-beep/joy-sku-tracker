@@ -1,8 +1,59 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
-import os, zipfile, datetime
+import os, zipfile, datetime, requests
 
 app = Flask(__name__)
 BASE_DOWNLOAD = "downloads"
+SERPAPI_KEY = os.environ.get("SERPAPI_KEY")
+
+# ------------------------
+# 🔍 Téléchargement images
+# ------------------------
+def download_images(query, target_folder, limit=5):
+    os.makedirs(target_folder, exist_ok=True)
+
+    url = "https://serpapi.com/search.json"
+    params = {
+        "engine": "google_images",
+        "q": query,
+        "api_key": SERPAPI_KEY,
+        "num": 20,                 # on récupère plus pour filtrer
+        "tbs": "isz:l"             # grandes images uniquement
+    }
+
+    response = requests.get(url, params=params, timeout=20)
+    response.raise_for_status()
+    results = response.json().get("images_results", [])
+
+    downloaded = 0
+
+    for img in results:
+        if downloaded >= limit:
+            break
+
+        try:
+            img_url = img.get("original")
+            if not img_url:
+                continue
+
+            img_data = requests.get(img_url, timeout=15).content
+
+            # 🧪 Filtrage simple par taille (évite miniatures)
+            if len(img_data) < 150_000:   # ~150 KB minimum
+                continue
+
+            filename = f"image_{downloaded+1}.jpg"
+            with open(os.path.join(target_folder, filename), "wb") as f:
+                f.write(img_data)
+
+            downloaded += 1
+
+        except Exception as e:
+            print("Download error:", e)
+
+    return downloaded
+
+
+# ------------------------
 
 @app.route("/")
 def index():
@@ -17,11 +68,15 @@ def run():
 
     for row in data:
         sku = row.get("sku", "unknown")
-        sku_dir = os.path.join(session_dir, sku)
-        os.makedirs(sku_dir, exist_ok=True)
+        brand = row.get("brand", "")
+        name = row.get("name", "")
+        size = row.get("size", "")
 
-        with open(os.path.join(sku_dir, "example.txt"), "w") as f:
-            f.write("Placeholder for downloaded images")
+        query = f"{brand} {name} {size}"
+        sku_dir = os.path.join(session_dir, sku)
+
+        print("Searching:", query)
+        download_images(query, sku_dir, limit=5)
 
     zip_name = f"joy_sku_{today}.zip"
     zip_path = os.path.join(BASE_DOWNLOAD, zip_name)

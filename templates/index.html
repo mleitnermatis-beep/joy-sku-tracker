@@ -1,53 +1,62 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Joy SKU Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Joy SKU Tracker</title>
+<style>
+table {border-collapse: collapse;}
+td,th {border:1px solid #ccc;padding:4px;}
+progress{width:300px;}
+</style>
 </head>
 <body>
-<h1>Joy SKU Tracker</h1>
+<h2>Joy SKU Tracker</h2>
 
-<form id="skuForm">
-<table border="1">
+<table id="table">
 <tr>
-<th>#</th><th>SKU</th><th>Marque</th><th>Nom produit</th><th>Contenance</th>
+  <th>SKU</th>
+  <th>Marque</th>
+  <th>Produit</th>
+  <th>Contenance</th>
 </tr>
-{% for i in range(50) %}
-<tr>
-<td>{{ i+1 }}</td>
-<td><input name="sku_{{ i }}"></td>
-<td><input name="marque_{{ i }}"></td>
-<td><input name="nom_{{ i }}"></td>
-<td><input name="contenance_{{ i }}"></td>
-</tr>
-{% endfor %}
 </table>
-<button type="submit">Lancer Joy SKU Tracker</button>
-</form>
 
-<div id="progress"></div>
+<button onclick="addRow()">Ajouter ligne</button>
+<button onclick="run()">Lancer</button>
+
+<br><br>
+<progress id="bar" value="0" max="100"></progress>
 
 <script>
-const form = document.getElementById('skuForm');
-const progressDiv = document.getElementById('progress');
+function addRow(){
+ const t=document.getElementById("table");
+ const r=t.insertRow();
+ for(let i=0;i<4;i++){
+   r.insertCell().innerHTML='<input>';
+ }
+}
+for(let i=0;i<5;i++) addRow();
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = new FormData(form);
-  await fetch('/', { method: 'POST', body: formData });
+function run(){
+ const rows=[];
+ document.querySelectorAll("#table tr").forEach((r,i)=>{
+  if(i===0) return;
+  const c=r.querySelectorAll("input");
+  if(c[0].value) rows.push({sku:c[0].value});
+ });
 
-  const timer = setInterval(async () => {
-    const res = await fetch('/progress');
-    const data = await res.json();
-    progressDiv.innerText = `Progression: ${data.current}/${data.total} (${data.percent}%)`;
+ document.getElementById("bar").value=40;
 
-    if (!data.running && data.total > 0) {
-      clearInterval(timer);
-      progressDiv.innerHTML = 'Terminé — <a href="/download">Télécharger le ZIP</a>';
-    }
-  }, 1000);
-});
+ fetch("/run",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({rows})
+ })
+ .then(r=>r.json())
+ .then(d=>{
+    document.getElementById("bar").value=100;
+    alert("ZIP généré : "+d.zip);
+ });
+}
 </script>
 
 </body>
